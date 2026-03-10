@@ -1,0 +1,637 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+<title>El Impostor</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Crimson+Pro:ital,wght@0,300;0,400;0,600;1,300&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet"/>
+<style>
+:root {
+  --bg:         #0a0a0a;
+  --bg2:        #111111;
+  --bg3:        #181818;
+  --line:       #252525;
+  --line2:      #2f2f2f;
+  --red:        #bf2d2d;
+  --red-hi:     #e03c3c;
+  --red-glow:   rgba(191,45,45,0.28);
+  --red-dim:    rgba(191,45,45,0.12);
+  --amber:      #d4922a;
+  --amber-hi:   #eaaa3c;
+  --amber-glow: rgba(212,146,42,0.25);
+  --amber-dim:  rgba(212,146,42,0.1);
+  --green:      #2a9460;
+  --green-hi:   #35b876;
+  --green-dim:  rgba(42,148,96,0.12);
+  --green-glow: rgba(42,148,96,0.28);
+  --text:       #e2dbd0;
+  --text-mid:   #9a9080;
+  --text-dim:   #555046;
+  --fd:         'Bebas Neue', sans-serif;
+  --fs:         'Crimson Pro', serif;
+  --fm:         'DM Mono', monospace;
+  --r:          6px;
+  --t:          0.18s ease;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{-webkit-text-size-adjust:100%}
+body{background:var(--bg);color:var(--text);font-family:var(--fs);min-height:100dvh;overflow-x:hidden}
+body::after{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E");pointer-events:none;z-index:9998;opacity:0.6}
+
+/* SCREENS */
+.screen{display:none;min-height:100dvh;padding:1.25rem 1rem 2rem;flex-direction:column}
+.screen.active{display:flex;animation:sIn .25s ease}
+@keyframes sIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+/* HERO */
+.hero{text-align:center;padding:1.4rem 0 1.1rem}
+.hero-eye{display:block;font-size:2rem;margin-bottom:.1rem;filter:drop-shadow(0 0 12px var(--red-glow));animation:eyePulse 4s ease-in-out infinite}
+@keyframes eyePulse{0%,100%{filter:drop-shadow(0 0 10px var(--red-glow))}50%{filter:drop-shadow(0 0 24px rgba(191,45,45,.55))}}
+.hero-title{font-family:var(--fd);font-size:clamp(3.4rem,15vw,5.2rem);letter-spacing:.06em;line-height:.88;color:var(--text)}
+.hero-title span{display:block;font-size:.48em;letter-spacing:.3em;color:var(--red-hi)}
+.hero-sub{font-family:var(--fm);font-size:.58rem;letter-spacing:.2em;color:var(--text-dim);margin-top:.55rem;text-transform:uppercase}
+
+/* SECTIONS */
+.sec{background:var(--bg2);border:1px solid var(--line);border-radius:var(--r);padding:1.1rem 1rem;margin-bottom:.85rem}
+.sec-title{font-family:var(--fd);font-size:1.1rem;letter-spacing:.12em;color:var(--amber);margin-bottom:.9rem;display:flex;align-items:center;gap:.5rem}
+
+/* FIELDS */
+.field{margin-bottom:.7rem}
+.field label{display:block;font-family:var(--fm);font-size:.58rem;letter-spacing:.18em;text-transform:uppercase;color:var(--text-dim);margin-bottom:.35rem}
+input[type=text],input[type=number],textarea{width:100%;background:var(--bg);border:1px solid var(--line2);border-radius:4px;color:var(--text);font-family:var(--fs);font-size:1rem;padding:.6rem .8rem;outline:none;transition:border-color var(--t),box-shadow var(--t);-webkit-appearance:none}
+input[type=text]:focus,input[type=number]:focus,textarea:focus{border-color:var(--red);box-shadow:0 0 0 3px var(--red-dim)}
+textarea{resize:vertical;min-height:72px;line-height:1.65}
+
+/* TOGGLE SWITCH */
+.toggle-row{display:flex;align-items:center;justify-content:space-between;padding:.55rem 0;border-top:1px solid var(--line);margin-top:.5rem}
+.toggle-lbl{font-family:var(--fm);font-size:.68rem;letter-spacing:.1em;color:var(--text-mid)}
+.switch{position:relative;display:inline-block;width:40px;height:22px}
+.switch input{opacity:0;width:0;height:0}
+.slider{position:absolute;cursor:pointer;inset:0;background:var(--line2);border-radius:22px;transition:background var(--t)}
+.slider::before{content:'';position:absolute;left:3px;bottom:3px;width:16px;height:16px;background:var(--text-dim);border-radius:50%;transition:transform var(--t),background var(--t)}
+.switch input:checked+.slider{background:var(--red)}
+.switch input:checked+.slider::before{transform:translateX(18px);background:#fff}
+
+/* BUTTONS */
+.btn{display:block;width:100%;padding:.85rem 1.2rem;border:none;border-radius:4px;font-family:var(--fd);font-size:1.05rem;letter-spacing:.1em;cursor:pointer;text-transform:uppercase;transition:all var(--t);-webkit-tap-highlight-color:transparent;user-select:none}
+.btn-primary{background:var(--red);color:#fff;box-shadow:0 4px 22px var(--red-glow)}
+.btn-primary:hover:not(:disabled){background:var(--red-hi);box-shadow:0 4px 30px rgba(224,60,60,.45)}
+.btn-primary:active:not(:disabled){transform:scale(.98)}
+.btn-amber{background:var(--amber);color:#0a0a0a;box-shadow:0 4px 22px var(--amber-glow)}
+.btn-amber:hover:not(:disabled){background:var(--amber-hi)}
+.btn-amber:active:not(:disabled){transform:scale(.98)}
+.btn-ghost{background:transparent;border:1px solid var(--line2);color:var(--text-mid)}
+.btn-ghost:hover:not(:disabled){border-color:var(--text-mid);color:var(--text)}
+.btn-ghost:active:not(:disabled){transform:scale(.98)}
+.btn-green{background:var(--green);color:#fff;box-shadow:0 4px 22px var(--green-glow)}
+.btn-green:hover:not(:disabled){background:var(--green-hi)}
+.btn-green:active:not(:disabled){transform:scale(.98)}
+.btn:disabled{opacity:.3;cursor:not-allowed;box-shadow:none}
+.btn-sm{width:auto;display:inline-flex;align-items:center;padding:.4rem .75rem;font-size:.75rem}
+.btn-row{display:flex;gap:.6rem}
+.btn-row .btn{flex:1}
+
+/* PLAYER LIST */
+.plist{list-style:none;display:flex;flex-direction:column;gap:.35rem}
+.pitem{display:flex;align-items:center;justify-content:space-between;background:var(--bg);border:1px solid var(--line);border-radius:4px;padding:.55rem .8rem;font-family:var(--fs);font-size:.95rem;animation:iIn .2s ease both}
+@keyframes iIn{from{opacity:0;transform:translateX(-8px)}to{opacity:1;transform:translateX(0)}}
+.kill{background:none;border:none;color:var(--text-dim);cursor:pointer;font-size:1rem;padding:0 .15rem;transition:color var(--t)}
+.kill:hover{color:var(--red-hi)}
+.badge{display:inline-block;background:var(--red);color:#fff;font-family:var(--fd);font-size:.8rem;letter-spacing:.05em;border-radius:3px;padding:.1rem .45rem;vertical-align:middle;margin-left:.4rem}
+
+/* CHIPS */
+.chips{display:flex;flex-wrap:wrap;gap:.35rem;margin-top:.55rem}
+.chip{background:var(--bg3);border:1px solid var(--line2);border-radius:3px;padding:.22rem .6rem;font-size:.75rem;font-family:var(--fm);color:var(--text-mid);display:flex;align-items:center;gap:.3rem}
+.chip.used{opacity:.3;text-decoration:line-through}
+.chip .cx{cursor:pointer;color:var(--text-dim);transition:color var(--t)}
+.chip .cx:hover{color:var(--red-hi)}
+.chip-avail{font-family:var(--fm);font-size:.6rem;color:var(--text-dim);margin-top:.35rem}
+.cat-card{background:var(--bg);border:1px solid var(--line);border-radius:4px;padding:.7rem .85rem;margin-bottom:.5rem;animation:iIn .2s ease}
+.cat-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:.35rem}
+.cat-name{font-family:var(--fd);font-size:1rem;letter-spacing:.08em;color:var(--amber)}
+.cat-acts{display:flex;gap:.35rem}
+
+/* RULE DIVIDER */
+.rule{display:flex;align-items:center;gap:.6rem;color:var(--text-dim);font-family:var(--fm);font-size:.55rem;letter-spacing:.18em;text-transform:uppercase;margin:1rem 0 .75rem}
+.rule::before,.rule::after{content:'';flex:1;height:1px;background:linear-gradient(to right,transparent,var(--line),transparent)}
+.notice{text-align:center;padding:1.2rem;color:var(--text-dim);font-family:var(--fs);font-size:.9rem;line-height:1.7;border:1px dashed var(--line2);border-radius:4px}
+.spacer{flex:1}
+.mt{margin-top:.6rem}
+.mt2{margin-top:1rem}
+
+/* ── ROLE SCREEN ── */
+#screen-role{justify-content:center;align-items:center;text-align:center;padding:2rem 1.25rem}
+.pass-wrap{width:100%;max-width:340px}
+.pass-label{font-family:var(--fm);font-size:.62rem;letter-spacing:.22em;color:var(--text-dim);text-transform:uppercase;margin-bottom:.4rem}
+.pass-name{font-family:var(--fd);font-size:clamp(2.8rem,13vw,4.2rem);letter-spacing:.05em;line-height:1;color:var(--text);margin-bottom:.5rem}
+.pass-hint{font-family:var(--fs);font-size:.82rem;color:var(--text-dim);font-style:italic;margin-bottom:1.8rem}
+
+/* progress dots */
+.dots{display:flex;justify-content:center;gap:.4rem;margin-bottom:1.4rem}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--line2);transition:background .3s}
+.dot.done{background:var(--red)}
+.dot.active{background:var(--amber);box-shadow:0 0 6px var(--amber-glow)}
+
+.reveal-box{display:none;width:100%;max-width:340px}
+.reveal-box.show{display:block;animation:rvl .35s cubic-bezier(.2,1,.3,1)}
+@keyframes rvl{from{opacity:0;transform:scale(.9)}to{opacity:1;transform:scale(1)}}
+
+.role-card{border-radius:8px;padding:1.75rem 1.5rem;margin-bottom:1rem;position:relative;overflow:hidden}
+.role-card.innocent{background:linear-gradient(145deg,#0a1a10,#0d1f14);border:1px solid rgba(42,148,96,.4);box-shadow:0 0 40px rgba(42,148,96,.1),inset 0 1px 0 rgba(53,184,118,.12)}
+.role-card.impostor{background:linear-gradient(145deg,#180808,#1e0a0a);border:1px solid rgba(191,45,45,.55);box-shadow:0 0 40px var(--red-glow),inset 0 1px 0 rgba(224,60,60,.15)}
+.role-badge{font-family:var(--fm);font-size:.58rem;letter-spacing:.28em;text-transform:uppercase;margin-bottom:.7rem}
+.role-card.innocent .role-badge{color:rgba(53,184,118,.7)}
+.role-card.impostor .role-badge{color:rgba(224,60,60,.7)}
+.role-main{font-family:var(--fd);font-size:clamp(2rem,10vw,3rem);letter-spacing:.04em;line-height:1}
+.role-card.innocent .role-main{color:#a6e8c2}
+.role-card.impostor .role-main{color:#ff6b5b;text-shadow:0 0 30px var(--red-glow);animation:impGlow 2s ease infinite}
+@keyframes impGlow{0%,100%{text-shadow:0 0 20px var(--red-glow)}50%{text-shadow:0 0 40px rgba(255,80,60,.6)}}
+.role-cat{font-family:var(--fs);font-style:italic;font-size:.82rem;margin-top:.6rem}
+.role-card.innocent .role-cat{color:rgba(166,232,194,.55)}
+.role-card.impostor .role-cat{color:rgba(255,107,91,.55)}
+
+/* ── GAME SCREEN ── */
+#screen-game{padding:1rem 1rem 1.5rem}
+.gtopbar{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:1rem;padding-bottom:.85rem;border-bottom:1px solid var(--line)}
+.g-lbl{font-family:var(--fm);font-size:.55rem;letter-spacing:.18em;color:var(--text-dim);text-transform:uppercase}
+.g-val{font-family:var(--fd);font-size:1.4rem;letter-spacing:.08em;color:var(--amber);line-height:1.1}
+.g-rval{font-family:var(--fd);font-size:1.4rem;color:var(--text);text-align:right}
+
+/* TIMER */
+.timer-wrap{background:var(--bg2);border:1px solid var(--line);border-radius:var(--r);padding:.8rem 1rem;margin-bottom:.85rem;position:relative;overflow:hidden}
+.timer-bar{position:absolute;bottom:0;left:0;height:3px;background:var(--red);transition:width 1s linear}
+.timer-digits{font-family:var(--fd);font-size:clamp(2.2rem,11vw,3.5rem);letter-spacing:.1em;line-height:1;text-align:center;transition:color .3s}
+.timer-wrap.warn .timer-digits{color:var(--red-hi);animation:tPulse .7s ease infinite}
+@keyframes tPulse{0%,100%{opacity:1}50%{opacity:.55}}
+.timer-lbl{font-family:var(--fm);font-size:.55rem;letter-spacing:.18em;color:var(--text-dim);text-align:center;margin-top:.2rem}
+.timer-ctrl{display:flex;gap:.5rem;margin-bottom:.7rem}
+.timer-ctrl .btn{flex:1;padding:.55rem .6rem;font-size:.85rem}
+.timer-off{text-align:center;padding:.55rem;font-family:var(--fm);font-size:.65rem;letter-spacing:.12em;color:var(--text-dim);border:1px dashed var(--line2);border-radius:4px;margin-bottom:.85rem}
+
+/* TURN CARD */
+.turn-card{background:var(--bg2);border:1px solid var(--line);border-radius:var(--r);overflow:hidden;margin-bottom:.85rem}
+.turn-current{background:linear-gradient(135deg,var(--amber-dim),transparent);border-bottom:1px solid var(--line);padding:1rem 1.1rem;position:relative}
+.turn-current::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--amber)}
+.t-lbl{font-family:var(--fm);font-size:.55rem;letter-spacing:.2em;color:var(--amber);text-transform:uppercase;margin-bottom:.25rem}
+.t-name{font-family:var(--fd);font-size:clamp(1.9rem,9vw,2.8rem);letter-spacing:.04em;line-height:1;color:var(--text)}
+.t-num{position:absolute;top:.8rem;right:.9rem;font-family:var(--fd);font-size:2rem;letter-spacing:.05em;color:var(--line2);line-height:1}
+.turn-next{padding:.75rem 1.1rem;display:flex;align-items:center;gap:.6rem}
+.tn-lbl{font-family:var(--fm);font-size:.55rem;letter-spacing:.15em;color:var(--text-dim);text-transform:uppercase;flex-shrink:0}
+.tn-arr{color:var(--line2);font-size:.9rem}
+.tn-name{font-family:var(--fs);font-size:1.05rem;color:var(--text-mid);font-style:italic}
+.turn-prog{padding:.5rem 1.1rem .8rem}
+.tpbar{height:2px;background:var(--line);border-radius:1px;overflow:hidden}
+.tpfill{height:100%;background:var(--amber);border-radius:1px;transition:width .35s ease}
+.tplbl{font-family:var(--fm);font-size:.55rem;letter-spacing:.1em;color:var(--text-dim);margin-top:.3rem}
+
+/* REVEAL SCREEN */
+#screen-reveal{justify-content:center;align-items:center;text-align:center;padding:2rem 1.25rem}
+.final-wrap{width:100%;max-width:380px;animation:sIn .4s ease}
+.final-title{font-family:var(--fd);font-size:clamp(1.3rem,6vw,2rem);letter-spacing:.15em;color:var(--text-dim);margin-bottom:1rem}
+.final-imp{font-family:var(--fd);font-size:clamp(2.8rem,14vw,4.5rem);letter-spacing:.04em;color:var(--red-hi);text-shadow:0 0 35px var(--red-glow);line-height:1;margin-bottom:.35rem;animation:glitch 4s infinite}
+@keyframes glitch{0%,88%,100%{text-shadow:0 0 35px var(--red-glow)}90%{text-shadow:-3px 0 var(--amber),3px 0 var(--red-hi);transform:skewX(-1deg)}92%{text-shadow:3px 0 var(--amber),-3px 0 var(--red-hi);transform:skewX(1.2deg)}94%{text-shadow:0 0 35px var(--red-glow);transform:skewX(0)}}
+.word-box{background:var(--bg2);border:1px solid var(--line);border-radius:6px;padding:1.1rem;margin:1.1rem 0}
+.wb-lbl{font-family:var(--fm);font-size:.58rem;letter-spacing:.22em;color:var(--text-dim);text-transform:uppercase;margin-bottom:.3rem}
+.wb-val{font-family:var(--fd);font-size:clamp(1.8rem,9vw,2.8rem);letter-spacing:.05em;color:var(--amber)}
+.wb-cat{font-family:var(--fs);font-size:.8rem;color:var(--text-dim);margin-top:.2rem;font-style:italic}
+.role-row{display:flex;align-items:center;justify-content:space-between;padding:.5rem .7rem;border-bottom:1px solid var(--line);font-family:var(--fs)}
+.role-row:last-child{border-bottom:none}
+.rr-name{font-size:.95rem;color:var(--text-mid)}
+.rr-pill{font-family:var(--fm);font-size:.62rem;letter-spacing:.1em;padding:.2rem .55rem;border-radius:3px}
+.rr-pill.impostor{background:var(--red-dim);color:var(--red-hi);border:1px solid rgba(191,45,45,.3)}
+.rr-pill.innocent{background:var(--green-dim);color:var(--green-hi);border:1px solid rgba(42,148,96,.25)}
+
+::-webkit-scrollbar{width:4px}
+::-webkit-scrollbar-track{background:var(--bg)}
+::-webkit-scrollbar-thumb{background:var(--line2);border-radius:2px}
+</style>
+</head>
+<body>
+
+<!-- ══════════════════════
+     SETUP
+══════════════════════ -->
+<div id="screen-setup" class="screen active">
+  <div class="hero">
+    <span class="hero-eye">👁</span>
+    <div class="hero-title">EL <span>IMPOSTOR</span></div>
+    <div class="hero-sub">Juego de deducción social</div>
+  </div>
+
+  <div class="sec">
+    <div class="sec-title">📋 Categorías y Palabras</div>
+    <div class="field">
+      <label>Nombre de categoría</label>
+      <input type="text" id="in-cat" placeholder="ej. Películas de terror" maxlength="40"/>
+    </div>
+    <div class="field">
+      <label>Palabras (una por línea)</label>
+      <textarea id="in-words" placeholder="El Exorcista&#10;Hereditary&#10;The Shining&#10;Midsommar"></textarea>
+    </div>
+    <button class="btn btn-ghost" onclick="addCat()">+ Agregar categoría</button>
+    <div class="rule">Guardadas</div>
+    <div id="cat-list"><div class="notice">Sin categorías aún. Agrega al menos una.</div></div>
+  </div>
+
+  <div class="sec">
+    <div class="sec-title">👥 Jugadores <span class="badge" id="pbadge">0</span></div>
+    <div style="display:flex;gap:.5rem;margin-bottom:.7rem">
+      <input type="text" id="in-player" placeholder="Nombre del jugador" maxlength="25" style="flex:1"/>
+      <button class="btn btn-ghost btn-sm" onclick="addPlayer()">+ Añadir</button>
+    </div>
+    <ul class="plist" id="plist"><li><div class="notice">Añade mínimo 3 jugadores.</div></li></ul>
+  </div>
+
+  <div class="sec">
+    <div class="sec-title">⚙️ Configuración</div>
+    <div class="toggle-row">
+      <span class="toggle-lbl">Activar temporizador</span>
+      <label class="switch">
+        <input type="checkbox" id="chk-timer" checked onchange="toggleTmrUI()"/>
+        <span class="slider"></span>
+      </label>
+    </div>
+    <div id="timer-settings" style="margin-top:.7rem">
+      <div class="field">
+        <label>Duración (minutos)</label>
+        <input type="number" id="in-timer" value="5" min="1" max="60"/>
+      </div>
+    </div>
+    <div class="toggle-row" style="margin-top:.2rem">
+      <span class="toggle-lbl">Número de impostores</span>
+      <input type="number" id="in-impostors" value="1" min="1" max="3" style="width:60px;text-align:center"/>
+    </div>
+  </div>
+
+  <div class="spacer"></div>
+  <button class="btn btn-primary mt2" id="start-btn" onclick="startGame()" disabled>🎮 Comenzar juego</button>
+</div>
+
+
+<!-- ══════════════════════
+     ROLE DISTRIBUTION
+══════════════════════ -->
+<div id="screen-role" class="screen">
+  <div id="role-pass" class="pass-wrap">
+    <div class="dots" id="dots"></div>
+    <div class="pass-label">Pásale el teléfono a</div>
+    <div class="pass-name" id="pass-name">–</div>
+    <div class="pass-hint">Asegúrate que nadie más vea la pantalla</div>
+    <button class="btn btn-primary" onclick="doReveal()">👁 Ver mi rol</button>
+  </div>
+  <div class="reveal-box" id="role-reveal">
+    <div class="role-card" id="role-card">
+      <div class="role-badge" id="role-badge">ROL</div>
+      <div class="role-main" id="role-main">—</div>
+      <div class="role-cat" id="role-cat"></div>
+    </div>
+    <button class="btn btn-ghost" onclick="hideAndPass()">🔒 Ocultar y pasar</button>
+  </div>
+</div>
+
+
+<!-- ══════════════════════
+     GAMEPLAY
+══════════════════════ -->
+<div id="screen-game" class="screen">
+  <div class="gtopbar">
+    <div>
+      <div class="g-lbl">Categoría</div>
+      <div class="g-val" id="g-cat">–</div>
+    </div>
+    <div>
+      <div class="g-lbl" style="text-align:right">Ronda</div>
+      <div class="g-rval" id="g-round">1</div>
+    </div>
+  </div>
+
+  <!-- Timer block -->
+  <div id="timer-block">
+    <div class="timer-wrap" id="timer-wrap">
+      <div class="timer-bar" id="timer-bar" style="width:100%"></div>
+      <div class="timer-digits" id="timer-digits">05:00</div>
+      <div class="timer-lbl">tiempo restante</div>
+    </div>
+    <div class="timer-ctrl">
+      <button class="btn btn-ghost" id="btn-pause"  onclick="pauseTimer()">⏸ Pausar</button>
+      <button class="btn btn-ghost" id="btn-resume" onclick="resumeTimer()" style="display:none">▶ Reanudar</button>
+    </div>
+  </div>
+  <div id="timer-off" class="timer-off" style="display:none">⏱ Sin límite de tiempo</div>
+
+  <!-- Dynamic turn card -->
+  <div class="turn-card" id="turn-card">
+    <div class="turn-current">
+      <div class="t-num" id="t-num">1</div>
+      <div class="t-lbl">Turno actual</div>
+      <div class="t-name" id="t-name">–</div>
+    </div>
+    <div class="turn-next">
+      <span class="tn-lbl">Siguiente</span>
+      <span class="tn-arr">›</span>
+      <span class="tn-name" id="tn-name">–</span>
+    </div>
+    <div class="turn-prog">
+      <div class="tpbar"><div class="tpfill" id="tpfill" style="width:0%"></div></div>
+      <div class="tplbl" id="tplbl">Turno 1 de N</div>
+    </div>
+  </div>
+
+  <button class="btn btn-amber" onclick="nextTurn()" style="margin-bottom:.6rem">▶ Siguiente turno</button>
+  <button class="btn btn-primary" onclick="endRound()">🔍 Revelar impostor</button>
+</div>
+
+
+<!-- ══════════════════════
+     FINAL REVEAL
+══════════════════════ -->
+<div id="screen-reveal" class="screen">
+  <div class="final-wrap">
+    <div class="final-title">EL IMPOSTOR ERA</div>
+    <div class="final-imp" id="final-imp">–</div>
+    <div class="word-box">
+      <div class="wb-lbl">La palabra secreta era</div>
+      <div class="wb-val" id="final-word">–</div>
+      <div class="wb-cat" id="final-cat">–</div>
+    </div>
+    <div class="rule">Todos los roles</div>
+    <div class="sec" style="padding:0;overflow:hidden" id="all-roles"></div>
+    <div style="display:flex;flex-direction:column;gap:.6rem;margin-top:1.25rem">
+      <button class="btn btn-amber" id="btn-next" onclick="nextRound()">⚡ Siguiente ronda</button>
+      <button class="btn btn-ghost" onclick="goSetup()">↩ Volver al inicio</button>
+    </div>
+  </div>
+</div>
+
+
+<script>
+/* ─── STATE ─── */
+const S = {
+  cats:[],players:[],round:0,
+  activeCat:null,word:null,
+  impostorIdxs:[],roles:[],
+  queue:[],qPos:0,
+  useTimer:true,timerTotal:300,timerLeft:300,timerInt:null,
+  turnOrder:[],turnPos:0
+};
+
+/* ─── SCREENS ─── */
+const show = id => {
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  window.scrollTo(0,0);
+};
+
+/* ─── TIMER TOGGLE UI ─── */
+function toggleTmrUI(){
+  document.getElementById('timer-settings').style.display =
+    document.getElementById('chk-timer').checked ? 'block' : 'none';
+}
+
+/* ─── CATEGORIES ─── */
+function addCat(){
+  const name=document.getElementById('in-cat').value.trim();
+  const raw=document.getElementById('in-words').value.trim();
+  if(!name){alert('Ingresa un nombre de categoría.');return;}
+  if(!raw){alert('Ingresa al menos una palabra.');return;}
+  const words=[...new Set(raw.split('\n').map(w=>w.trim()).filter(Boolean))];
+  if(words.length<2){alert('Agrega al menos 2 palabras distintas.');return;}
+  const ex=S.cats.findIndex(c=>c.name.toLowerCase()===name.toLowerCase());
+  if(ex>=0) S.cats[ex].words=[...new Set([...S.cats[ex].words,...words])];
+  else S.cats.push({name,words,used:[]});
+  document.getElementById('in-cat').value='';
+  document.getElementById('in-words').value='';
+  renderCats();validate();
+}
+function rmWord(ci,w){S.cats[ci].words=S.cats[ci].words.filter(x=>x!==w);S.cats[ci].used=S.cats[ci].used.filter(x=>x!==w);renderCats();validate();}
+function rmCat(ci){S.cats.splice(ci,1);renderCats();validate();}
+function resetCat(ci){S.cats[ci].used=[];renderCats();validate();}
+
+function renderCats(){
+  const el=document.getElementById('cat-list');
+  if(!S.cats.length){el.innerHTML='<div class="notice">Sin categorías. Agrega al menos una.</div>';return;}
+  el.innerHTML=S.cats.map((c,i)=>{
+    const av=c.words.filter(w=>!c.used.includes(w)).length;
+    return `<div class="cat-card">
+      <div class="cat-head">
+        <span class="cat-name">${e(c.name)}</span>
+        <div class="cat-acts">
+          ${c.used.length?`<button class="btn btn-ghost btn-sm" onclick="resetCat(${i})">↺</button>`:''}
+          <button class="btn btn-sm" style="background:var(--red);color:#fff" onclick="rmCat(${i})">✕</button>
+        </div>
+      </div>
+      <div class="chips">${c.words.map(w=>`<span class="chip${c.used.includes(w)?' used':''}">${e(w)}<span class="cx" onclick="rmWord(${i},'${e(w)}')">×</span></span>`).join('')}</div>
+      <div class="chip-avail">${av} disponible${av!==1?'s':''}</div>
+    </div>`;
+  }).join('');
+}
+
+/* ─── PLAYERS ─── */
+function addPlayer(){
+  const v=document.getElementById('in-player').value.trim();
+  if(!v)return;
+  if(S.players.includes(v)){alert('Ese jugador ya está en la lista.');return;}
+  S.players.push(v);
+  document.getElementById('in-player').value='';
+  renderPlayers();validate();
+}
+function rmPlayer(i){S.players.splice(i,1);renderPlayers();validate();}
+function renderPlayers(){
+  document.getElementById('pbadge').textContent=S.players.length;
+  const el=document.getElementById('plist');
+  if(!S.players.length){el.innerHTML='<li><div class="notice">Añade mínimo 3 jugadores.</div></li>';return;}
+  el.innerHTML=S.players.map((p,i)=>`<li class="pitem" style="animation-delay:${i*.05}s"><span>${e(p)}</span><button class="kill" onclick="rmPlayer(${i})">✕</button></li>`).join('');
+}
+
+/* ─── VALIDATE ─── */
+function validate(){
+  const ok=S.players.length>=3&&S.cats.some(c=>c.words.filter(w=>!c.used.includes(w)).length>0);
+  document.getElementById('start-btn').disabled=!ok;
+}
+
+/* ─── KEYBOARD ─── */
+document.getElementById('in-player').addEventListener('keydown',ev=>{if(ev.key==='Enter')addPlayer();});
+document.getElementById('in-cat').addEventListener('keydown',ev=>{if(ev.key==='Enter')document.getElementById('in-words').focus();});
+
+/* ─── GAME START ─── */
+function startGame(){S.round=0;startRound();}
+
+function startRound(){
+  S.round++;
+  /* pick word */
+  const avail=S.cats.map((c,i)=>({i,free:c.words.filter(w=>!c.used.includes(w))})).filter(x=>x.free.length);
+  if(!avail.length){alert('¡Sin palabras disponibles! Vuelve y agrega más.');return;}
+  const pk=avail[rnd(avail.length)];
+  S.activeCat=pk.i;
+  S.word=pk.free[rnd(pk.free.length)];
+  S.cats[S.activeCat].used.push(S.word);
+  /* roles */
+  const nImp=Math.min(parseInt(document.getElementById('in-impostors').value)||1,Math.floor(S.players.length/2));
+  S.impostorIdxs=shuf([...Array(S.players.length).keys()]).slice(0,nImp);
+  S.roles=S.players.map((_,i)=>S.impostorIdxs.includes(i)?'impostor':'innocent');
+  /* queue */
+  S.queue=shuf([...Array(S.players.length).keys()]);
+  S.qPos=0;
+  /* turns */
+  S.turnOrder=shuf([...Array(S.players.length).keys()]);
+  S.turnPos=0;
+  /* timer */
+  S.useTimer=document.getElementById('chk-timer').checked;
+  S.timerTotal=(parseInt(document.getElementById('in-timer').value)||5)*60;
+  S.timerLeft=S.timerTotal;
+
+  renderCats();
+  showPass();
+}
+
+/* ─── ROLE REVEAL ─── */
+function showPass(){
+  show('screen-role');
+  document.getElementById('role-pass').style.display='block';
+  document.getElementById('role-reveal').classList.remove('show');
+  const idx=S.queue[S.qPos];
+  document.getElementById('pass-name').textContent=S.players[idx];
+  /* dots */
+  document.getElementById('dots').innerHTML=S.players.map((_,i)=>{
+    let c='dot';
+    if(i<S.qPos)c+=' done';
+    if(i===S.qPos)c+=' active';
+    return `<span class="${c}"></span>`;
+  }).join('');
+}
+
+function doReveal(){
+  const idx=S.queue[S.qPos];
+  const role=S.roles[idx];
+  const card=document.getElementById('role-card');
+  card.className='role-card '+role;
+  if(role==='impostor'){
+    document.getElementById('role-badge').textContent='⚠ TU ROL';
+    document.getElementById('role-main').textContent='ERES EL IMPOSTOR';
+    document.getElementById('role-cat').textContent='Trata de adivinar la palabra sin ser descubierto.';
+  } else {
+    document.getElementById('role-badge').textContent='✓ PALABRA SECRETA';
+    document.getElementById('role-main').textContent=S.word;
+    document.getElementById('role-cat').textContent='Categoría: '+S.cats[S.activeCat].name;
+  }
+  document.getElementById('role-pass').style.display='none';
+  document.getElementById('role-reveal').classList.add('show');
+}
+
+function hideAndPass(){
+  S.qPos++;
+  if(S.qPos>=S.players.length) startGameScreen();
+  else showPass();
+}
+
+/* ─── GAME SCREEN ─── */
+function startGameScreen(){
+  document.getElementById('g-cat').textContent=S.cats[S.activeCat].name;
+  document.getElementById('g-round').textContent=S.round;
+
+  if(S.useTimer){
+    document.getElementById('timer-block').style.display='block';
+    document.getElementById('timer-off').style.display='none';
+    document.getElementById('timer-wrap').classList.remove('warn');
+    document.getElementById('btn-pause').style.display='';
+    document.getElementById('btn-resume').style.display='none';
+    updTimer();setBar(100);startTimer();
+  } else {
+    document.getElementById('timer-block').style.display='none';
+    document.getElementById('timer-off').style.display='block';
+    clearInterval(S.timerInt);
+  }
+
+  renderTurn();
+  show('screen-game');
+}
+
+/* ─── TIMER ─── */
+function startTimer(){
+  clearInterval(S.timerInt);
+  S.timerInt=setInterval(()=>{
+    S.timerLeft--;
+    updTimer();
+    setBar((S.timerLeft/S.timerTotal)*100);
+    if(S.timerLeft<=60) document.getElementById('timer-wrap').classList.add('warn');
+    if(S.timerLeft<=0){clearInterval(S.timerInt);endRound();}
+  },1000);
+}
+function pauseTimer(){
+  clearInterval(S.timerInt);
+  document.getElementById('btn-pause').style.display='none';
+  document.getElementById('btn-resume').style.display='';
+}
+function resumeTimer(){
+  startTimer();
+  document.getElementById('btn-pause').style.display='';
+  document.getElementById('btn-resume').style.display='none';
+}
+function updTimer(){
+  const m=Math.floor(S.timerLeft/60),s=S.timerLeft%60;
+  document.getElementById('timer-digits').textContent=pad(m)+':'+pad(s);
+}
+function setBar(pct){
+  document.getElementById('timer-bar').style.width=Math.max(0,pct)+'%';
+}
+
+/* ─── TURNS ─── */
+function renderTurn(){
+  const n=S.turnOrder.length;
+  const cur=S.turnOrder[S.turnPos%n];
+  const nxt=S.turnOrder[(S.turnPos+1)%n];
+  const num=S.turnPos+1;
+  document.getElementById('t-name').textContent=S.players[cur];
+  document.getElementById('tn-name').textContent=S.players[nxt];
+  document.getElementById('t-num').textContent=num;
+  document.getElementById('tpfill').style.width=(S.turnPos/n*100)+'%';
+  document.getElementById('tplbl').textContent=`Turno ${num} de ${n}`;
+  /* bounce animation */
+  const card=document.getElementById('turn-card');
+  card.style.animation='none';
+  card.offsetHeight;
+  card.style.animation='iIn .25s ease';
+}
+function nextTurn(){
+  S.turnPos=(S.turnPos+1)%S.turnOrder.length;
+  renderTurn();
+}
+
+/* ─── END ROUND ─── */
+function endRound(){
+  clearInterval(S.timerInt);
+  const impNames=S.impostorIdxs.map(i=>S.players[i]);
+  document.getElementById('final-imp').textContent=impNames.join(' & ');
+  const cat=S.cats[S.activeCat];
+  document.getElementById('final-word').textContent=S.word;
+  document.getElementById('final-cat').textContent='Categoría: '+cat.name;
+  document.getElementById('all-roles').innerHTML=S.players.map((p,i)=>`
+    <div class="role-row">
+      <span class="rr-name">${e(p)}</span>
+      <span class="rr-pill ${S.roles[i]}">${S.roles[i]==='impostor'?'🔴 Impostor':'🟢 Inocente'}</span>
+    </div>`).join('');
+  const more=S.cats.some(c=>c.words.filter(w=>!c.used.includes(w)).length>0);
+  const btn=document.getElementById('btn-next');
+  btn.disabled=!more;
+  btn.textContent=more?'⚡ Siguiente ronda':'✗ Sin más palabras';
+  show('screen-reveal');
+}
+
+function nextRound(){startRound();}
+function goSetup(){
+  clearInterval(S.timerInt);
+  renderCats();renderPlayers();validate();
+  show('screen-setup');
+}
+
+/* ─── UTILS ─── */
+function shuf(a){const b=[...a];for(let i=b.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[b[i],b[j]]=[b[j],b[i]];}return b;}
+function rnd(n){return Math.floor(Math.random()*n);}
+function pad(n){return String(n).padStart(2,'0');}
+function e(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
+
+/* ─── INIT ─── */
+renderPlayers();renderCats();validate();toggleTmrUI();
+</script>
+</body>
+</html>
